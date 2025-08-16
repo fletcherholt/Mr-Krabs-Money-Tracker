@@ -1,4 +1,4 @@
-# Mr. Krabs' money tracker (Wage Against the Machine)
+# Mr. Krabs' money tracker 
 
 A small, mobile-first web app that shows how much you're earning in realtime while you work. Enter an hourly wage, tap Start, and the app counts up your earnings (and stores shifts when you tap End).
 
