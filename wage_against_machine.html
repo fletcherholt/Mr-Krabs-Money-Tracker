@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mr. Krabs' money tracker</title>
+  <!-- Favicons: place the generated favicon files in the project root (see README below) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#7c5cff">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta name="msapplication-TileColor" content="#0d1220">
+  <meta name="msapplication-config" content="/browserconfig.xml">
+  <meta name="theme-color" content="#0f1b3a">
+  <style>
+  :root{--bg1:#071227;--bg2:#0f1b3a;--card:#0d1220;--muted:#b7c8dd;--accent:#ff6b6b;--accent2:#7c5cff}
+    *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#eaf2ff;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:12px;position:relative;overflow:hidden}
+
+  /* Keep a subtle page overlay; the card will host the actual image */
+  body::after{content:"";position:fixed;inset:0;background:linear-gradient(rgba(6,10,22,0.45), rgba(6,10,22,0.45));z-index:-1}
+  /* The main sheet fills the available viewport height so the card can stretch on mobile */
+  .sheet{width:100%;max-width:520px;height:calc(100vh - 24px);display:flex}
+  /* Card should fill the sheet and layout children vertically; reduced padding for tighter layout */
+  .card{position:relative;overflow:hidden;background-color:rgba(8,12,22,0.72);background-image:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:12px;border:1px solid rgba(124,92,255,0.06);box-shadow:0 12px 40px rgba(8,10,20,0.6);display:flex;flex-direction:column;height:100%}
+
+  /* Card background image (blurred) and dark overlay for readable foreground */
+  .card::before{content:"";position:absolute;inset:0;background-image:url('5ed467ed44f9800643a141b8a6472b97.jpg');background-size:cover;background-position:center center;filter:blur(6px) saturate(1.03) contrast(0.95);transform:scale(1.03);z-index:-1}
+  .card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(6,8,18,0.46), rgba(10,14,26,0.5));z-index:0}
+  /* ensure card content sits above pseudo layers */
+  .card > *{position:relative;z-index:1}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-weight:800;overflow:hidden}
+  .logo img{width:100%;height:100%;object-fit:cover;display:block}
+    h1{margin:0;font-size:1.1rem}
+  .muted{color:var(--muted);font-size:.85rem}
+
+    /* layout */
+  .field{margin-top:8px}
+    label{display:block;font-size:.9rem;margin-bottom:6px;color:var(--muted)}
+  input[type=number], select{width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.02);color:inherit;font-size:1rem}
+
+  .rate-box{margin-top:8px;background:rgba(255,255,255,0.02);padding:8px;border-radius:10px;display:flex;gap:10px;align-items:center}
+    .rate-item{flex:1}
+    .rate-item .val{font-weight:800;font-size:1.05rem}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .btn{padding:10px;border-radius:12px;border:0;font-weight:800;font-size:1rem;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#031428}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit}
+
+  /* Center live amount vertically within the card; reduce excess white-space and make amount very prominent */
+  .live-box{margin-top:10px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0.6;min-height:120px}
+  /* Responsive large headline for the live amount (slightly smaller max) */
+  .live-amount{font-variant-numeric:tabular-nums;font-size:clamp(2.2rem, 8vw, 4.2rem);font-weight:900;margin-bottom:6px;line-height:1;display:inline-flex;align-items:baseline;gap:0.4rem;color:var(--accent2);text-shadow:0 6px 18px rgba(124,92,255,0.08)}
+  .live-amount .currency{font-size:0.55em;opacity:0.95;margin-right:0.15em}
+  .live-amount #liveAmount{font-variant-numeric:tabular-nums}
+  .live-sub{color:var(--muted);font-size:clamp(1rem,3.5vw,1.25rem);margin-top:4px}
+
+    /* page 2 */
+  /* Each page is a vertical flex container so header stays at top and footer/notes stay at bottom */
+  .page{display:none;flex:1;flex-direction:column}
+  .page.active{display:flex}
+    .totals{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .totals .num{font-weight:900;font-size:1.5rem}
+  /* Allow the shift list to take remaining space and scroll when needed */
+  .shift-list{margin-top:12px;display:grid;gap:8px;flex:1;overflow:auto;padding-right:6px;padding-bottom:6px}
+    .shift{background:rgba(255,255,255,0.02);padding:10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+    .shift small{color:var(--muted);display:block}
+
+    .tiny{font-size:.82rem;color:var(--muted)}
+
+  @media (max-width:520px){ .logo{width:42px;height:42px} }
+
+    /* Stack controls on very small screens and tighten spacing further */
+    @media (max-width:420px){
+  .controls{grid-template-columns:1fr}
+      .card{padding:10px}
+      .sheet{max-width:420px}
+      .btn{padding:12px}
+    }
+
+    /* Make the card act like a full-screen panel on portrait phones */
+    @media (max-width:520px) and (orientation:portrait) {
+      body{padding:0}
+      .sheet{width:100%;max-width:420px;height:100vh;display:flex;align-items:stretch}
+      .card{height:100vh;border-radius:20px;padding:16px;display:flex;flex-direction:column}
+      /* ensure footer notes sit above the bottom edge */
+      .page .tiny.muted:last-of-type{margin-top:12px}
+    }
+
+    /* Push the last muted note to the bottom of the card */
+    .page .tiny.muted:last-of-type{margin-top:auto}
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <!-- PAGE 1: Live -->
+    <section id="livePage" class="page active card">
+      <header>
+        <div class="brand">
+          <div class="logo"><img src="684974d853de99b32c04f4351aa0ad0a.png" alt="app logo" /></div>
+          <div>
+            <h1>Mr. Krabs' money tracker</h1>
+            <div class="muted tiny">Made by Fletcher Holt - "Because I was bored"</div>
+          </div>
+        </div>
+        <div class="muted tiny">v1.0</div>
+      </header>
+
+      <div class="field">
+        <label for="wage">Hourly wage</label>
+        <input id="wage" type="number" step="0.01" inputmode="decimal" placeholder="e.g. 12.50" />
+      </div>
+
+      <div class="rate-box" aria-hidden="false">
+        <div class="rate-item">
+          <div class="tiny muted">Per minute</div>
+          <div class="val" id="perMinute">0.00</div>
+        </div>
+        <div class="rate-item">
+          <div class="tiny muted">Per hour</div>
+          <div class="val" id="perHour">0.00</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn" class="btn primary">Start</button>
+        <button id="endBtn" class="btn ghost">End (save)</button>
+      </div>
+
+      <div class="live-box">
+        <div class="live-amount"><span class="currency">£</span><span id="liveAmount">0.00</span></div>
+        <div class="live-sub" id="liveSub">Elapsed: 00:00:00</div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="totalsBtn" class="btn ghost" style="flex:1">Totals</button>
+      </div>
+
+      <div class="tiny muted" style="margin-top:10px">Notes: End (save) will store the current shift to totals. Totals are persistent on this device.</div>
+    </section>
+
+    <!-- PAGE 2: Totals -->
+    <section id="totalsPage" class="page card">
+      <header style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h1 style="margin:0;font-size:1rem">Total Earnings</h1>
+            <div class="tiny muted" id="shiftCount">0 shifts</div>
+          </div>
+          <div style="text-align:right">
+            <div class="tiny muted">Saved locally</div>
+            <button id="backBtn" class="btn ghost" style="margin-top:6px">Back</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="totals">
+        <div class="muted tiny">Total</div>
+        <div class="num" id="totalNumber">0.00</div>
+      </div>
+
+      <div class="shift-list" id="shiftList"></div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const wageEl = document.getElementById('wage');
+      const perMinEl = document.getElementById('perMinute');
+      const perHourEl = document.getElementById('perHour');
+      const startBtn = document.getElementById('startBtn');
+      const endBtn = document.getElementById('endBtn');
+      const liveAmountEl = document.getElementById('liveAmount');
+      const liveSubEl = document.getElementById('liveSub');
+      const totalsBtn = document.getElementById('totalsBtn');
+      const totalsPage = document.getElementById('totalsPage');
+      const livePage = document.getElementById('livePage');
+      const backBtn = document.getElementById('backBtn');
+      const totalNumber = document.getElementById('totalNumber');
+      const shiftList = document.getElementById('shiftList');
+      const shiftCountEl = document.getElementById('shiftCount');
+
+      let running = false;
+      let startPerf = 0;
+      let startReal = 0;
+      let raf = null;
+      const LS_SHIFTS = 'mev_shifts_v4';
+
+      function loadShifts(){ try{ return JSON.parse(localStorage.getItem(LS_SHIFTS) || '[]') }catch(e){ return [] } }
+      function saveShifts(list){ localStorage.setItem(LS_SHIFTS, JSON.stringify(list)) }
+
+      function computeRates(){
+        const wage = parseFloat(wageEl.value) || 0;
+        perHourEl.textContent = wage.toFixed(2);
+        perMinEl.textContent = (wage/60).toFixed(2);
+      }
+
+      function fmtDuration(ms){
+        const s = Math.floor(ms/1000);
+        const hh = Math.floor(s/3600); const mm = Math.floor((s%3600)/60); const ss = s%60;
+        return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+      }
+
+      function renderLive(now){
+        if(!running){ liveAmountEl.textContent = '0.00'; liveSubEl.textContent = 'Elapsed: 00:00:00'; return; }
+        const elapsed = now - startPerf;
+        const wage = parseFloat(wageEl.value) || 0;
+        const earned = (elapsed/1000) * (wage/3600);
+        liveAmountEl.textContent = earned.toFixed(2);
+        liveSubEl.textContent = 'Elapsed: ' + fmtDuration(elapsed);
+      }
+
+      function rafLoop(ts){ renderLive(ts); raf = requestAnimationFrame(rafLoop); }
+
+      startBtn.addEventListener('click', ()=>{
+        const wage = parseFloat(wageEl.value) || 0;
+        if(!(wage>0)){ alert('Enter a valid hourly wage'); return; }
+        if(running) return;
+        running = true; startPerf = performance.now(); startReal = Date.now();
+        startBtn.disabled = true; endBtn.disabled = false;
+        raf = requestAnimationFrame(rafLoop);
+      });
+
+      endBtn.addEventListener('click', ()=>{
+        if(!running){ alert('No active shift to end'); return; }
+        running = false; cancelAnimationFrame(raf);
+        const endPerf = performance.now();
+        const elapsed = endPerf - startPerf;
+        const wage = parseFloat(wageEl.value) || 0;
+        const earned = (elapsed/1000) * (wage/3600);
+        const entry = { id: Date.now(), start: new Date(startReal).toISOString(), end: new Date().toISOString(), duration: Math.round(elapsed/1000), wage: wage, amount: Number(earned.toFixed(2)) };
+        const list = loadShifts(); list.unshift(entry); saveShifts(list);
+        startBtn.disabled = false; endBtn.disabled = true; liveAmountEl.textContent = '0.00'; liveSubEl.textContent = 'Elapsed: 00:00:00';
+        computeTotalsAndRender();
+      });
+
+      function computeTotalsAndRender(){
+        const list = loadShifts();
+        const total = list.reduce((s,i)=> s + Number(i.amount||0), 0);
+        totalNumber.textContent = total.toFixed(2);
+        shiftCountEl.textContent = `${list.length} shift${list.length!==1?'s':''}`;
+        shiftList.innerHTML = '';
+        list.slice(0,20).forEach(it=>{
+          const el = document.createElement('div'); el.className='shift';
+          el.innerHTML = `<div><div style="font-weight:800">${it.amount.toFixed(2)}</div><small class="tiny muted">${new Date(it.start).toLocaleString()} • ${it.duration}s</small></div><div><button class=\"btn ghost\" data-id=\"${it.id}\">Delete</button></div>`;
+          shiftList.appendChild(el);
+        });
+        shiftList.querySelectorAll('button[data-id]').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const id = Number(btn.dataset.id);
+            if(!confirm('Delete this shift?')) return;
+            const newList = loadShifts().filter(s=>s.id!==id);
+            saveShifts(newList); computeTotalsAndRender();
+          });
+        });
+      }
+
+      totalsBtn.addEventListener('click', ()=>{
+        computeTotalsAndRender(); livePage.classList.remove('active'); totalsPage.classList.add('active');
+      });
+      backBtn.addEventListener('click', ()=>{ totalsPage.classList.remove('active'); livePage.classList.add('active'); });
+
+      wageEl.addEventListener('input', ()=>{ computeRates(); renderLive(performance.now()); });
+
+      (function init(){ computeRates(); computeTotalsAndRender(); endBtn.disabled = true; })();
+
+      document.addEventListener('keydown', (e)=>{ if(e.code==='Space'){ e.preventDefault(); if(running){ endBtn.click(); } else { startBtn.click(); } } });
+
+    })();
+  </script>
+</body>
+</html>
