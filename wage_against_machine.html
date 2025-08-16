@@ -22,9 +22,9 @@
   /* Keep a subtle page overlay; the card will host the actual image */
   body::after{content:"";position:fixed;inset:0;background:linear-gradient(rgba(6,10,22,0.45), rgba(6,10,22,0.45));z-index:-1}
   /* The main sheet fills the available viewport height so the card can stretch on mobile */
-  .sheet{width:100%;max-width:520px;height:calc(100vh - 24px);display:flex;flex-direction:row}
+  .sheet{width:100%;max-width:520px;height:calc(100vh - 24px);display:flex}
   /* Card should fill the sheet and layout children vertically; reduced padding for tighter layout */
-  .card{position:relative;overflow:hidden;background-color:rgba(8,12,22,0.72);background-image:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:12px;border:1px solid rgba(124,92,255,0.06);box-shadow:0 12px 40px rgba(8,10,20,0.6);display:flex;flex-direction:column;height:100%;width:50%;margin:0 3px}
+  .card{position:relative;overflow:hidden;background-color:rgba(8,12,22,0.72);background-image:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:12px;border:1px solid rgba(124,92,255,0.06);box-shadow:0 12px 40px rgba(8,10,20,0.6);display:flex;flex-direction:column;height:100%}
 
   /* Card background image (blurred) and dark overlay for readable foreground */
   .card::before{content:"";position:absolute;inset:0;background-image:url('5ed467ed44f9800643a141b8a6472b97.jpg');background-size:cover;background-position:center center;filter:blur(6px) saturate(1.03) contrast(0.95);transform:scale(1.03);z-index:-1}
@@ -59,9 +59,9 @@
   .live-amount #liveAmount{font-variant-numeric:tabular-nums}
   .live-sub{color:var(--muted);font-size:clamp(1rem,3.5vw,1.25rem);margin-top:4px}
 
-    /* Show both pages side by side on mobile */
-  .page{display:flex;flex:1;flex-direction:column;width:50%}
-  .page.active{display:flex}
+    /* Only show one page at a time - proper page switching */
+  .page{display:none !important;flex:1;flex-direction:column}
+  .page.active{display:flex !important}
     .totals{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .totals .num{font-weight:900;font-size:1.5rem}
   /* Allow the shift list to take remaining space and scroll when needed */
@@ -135,7 +135,7 @@
         <div class="live-sub" id="liveSub">Elapsed: 00:00:00</div>
       </div>
 
-      <div style="margin-top:12px;display:none;gap:8px">
+      <div style="margin-top:12px;display:flex;gap:8px">
         <button id="totalsBtn" class="btn ghost" style="flex:1">Totals</button>
       </div>
 
@@ -152,7 +152,7 @@
           </div>
           <div style="text-align:right">
             <div class="tiny muted">Saved locally</div>
-            <button id="backBtn" class="btn ghost" style="margin-top:6px;display:none">Back</button>
+            <button id="backBtn" class="btn ghost" style="margin-top:6px">Back</button>
           </div>
         </div>
       </header>
