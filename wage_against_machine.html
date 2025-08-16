@@ -59,10 +59,9 @@
   .live-amount #liveAmount{font-variant-numeric:tabular-nums}
   .live-sub{color:var(--muted);font-size:clamp(1rem,3.5vw,1.25rem);margin-top:4px}
 
-    /* page 2 */
-  /* Each page is a vertical flex container so header stays at top and footer/notes stay at bottom */
-  .page{display:none;flex:1;flex-direction:column}
-  .page.active{display:flex}
+    /* page switching - ensure only one page shows at a time */
+  .page{display:none !important;flex:1;flex-direction:column}
+  .page.active{display:flex !important}
     .totals{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .totals .num{font-weight:900;font-size:1.5rem}
   /* Allow the shift list to take remaining space and scroll when needed */
