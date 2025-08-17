@@ -162,6 +162,21 @@
         <div class="num" id="totalNumber">0.00</div>
       </div>
 
+        <button id="addPastShiftBtn" class="btn" style="margin:10px 0 0 0;width:100%">Add Past Shift</button>
+        <form id="addPastShiftForm" style="display:none;margin-top:10px;background:rgba(255,255,255,0.03);padding:10px;border-radius:10px">
+          <div style="margin-bottom:8px">
+            <label>Wage ($/hr): <input type="number" id="pastWage" min="0" step="0.01" required style="width:80px"></label>
+          </div>
+          <div style="margin-bottom:8px">
+            <label>Duration (minutes): <input type="number" id="pastDuration" min="1" step="1" required style="width:80px"></label>
+          </div>
+          <div style="margin-bottom:8px">
+            <label>Start Time: <input type="datetime-local" id="pastStart" required></label>
+          </div>
+          <button type="submit" class="btn" style="margin-right:8px">Save Shift</button>
+          <button type="button" id="cancelPastShift" class="btn ghost">Cancel</button>
+        </form>
+
       <div class="shift-list" id="shiftList"></div>
     </section>
   </main>
@@ -182,6 +197,14 @@
       const totalNumber = document.getElementById('totalNumber');
       const shiftList = document.getElementById('shiftList');
       const shiftCountEl = document.getElementById('shiftCount');
+
+    // Add Past Shift elements
+    const addPastShiftBtn = document.getElementById('addPastShiftBtn');
+    const addPastShiftForm = document.getElementById('addPastShiftForm');
+    const pastWage = document.getElementById('pastWage');
+    const pastDuration = document.getElementById('pastDuration');
+    const pastStart = document.getElementById('pastStart');
+    const cancelPastShift = document.getElementById('cancelPastShift');
 
       let running = false;
       let startPerf = 0;
@@ -256,6 +279,8 @@
             saveShifts(newList); computeTotalsAndRender();
           });
         });
+    addPastShiftForm.style.display = 'none';
+    addPastShiftBtn.style.display = '';
       }
 
       totalsBtn.addEventListener('click', ()=>{
@@ -264,6 +289,45 @@
       backBtn.addEventListener('click', ()=>{ totalsPage.classList.remove('active'); livePage.classList.add('active'); });
 
       wageEl.addEventListener('input', ()=>{ computeRates(); renderLive(performance.now()); });
+
+       // Add Past Shift logic
+       addPastShiftBtn.addEventListener('click', ()=>{
+         addPastShiftForm.reset();
+         addPastShiftForm.style.display = '';
+         addPastShiftBtn.style.display = 'none';
+       });
+
+       cancelPastShift.addEventListener('click', ()=>{
+         addPastShiftForm.style.display = 'none';
+         addPastShiftBtn.style.display = '';
+       });
+
+       addPastShiftForm.addEventListener('submit', function(e){
+         e.preventDefault();
+         const wage = parseFloat(pastWage.value) || 0;
+         const durationMin = parseInt(pastDuration.value, 10) || 0;
+         const startTime = new Date(pastStart.value);
+         if (!(wage > 0 && durationMin > 0 && !isNaN(startTime.getTime()))) {
+           alert('Please enter valid values.');
+           return;
+         }
+         const durationSec = durationMin * 60;
+         const amount = (durationSec / 3600) * wage;
+         const entry = {
+           id: Date.now(),
+           start: startTime.toISOString(),
+           end: new Date(startTime.getTime() + durationSec * 1000).toISOString(),
+           duration: durationSec,
+           wage: wage,
+           amount: Number(amount.toFixed(2))
+         };
+         const list = loadShifts();
+         list.unshift(entry);
+         saveShifts(list);
+         addPastShiftForm.style.display = 'none';
+         addPastShiftBtn.style.display = '';
+         computeTotalsAndRender();
+       });
 
       (function init(){ computeRates(); computeTotalsAndRender(); endBtn.disabled = true; })();
 
